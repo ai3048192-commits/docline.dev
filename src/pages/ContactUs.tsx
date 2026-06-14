@@ -96,12 +96,13 @@ const ContactPage: React.FC = () => {
 
     {/* الخريطة - تم إضافة z-0 لضمان عدم تداخلها مع العناصر الأخرى */}
     <div className="h-[300px] w-full rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white z-0">
-      <MapContainer center={[30.0333, 31.2333]} zoom={13} style={{ height: '100%', width: '100%' }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Marker position={[30.0333, 31.2333]}>
-          <Popup>عيادتنا هنا! ننتظر زيارتك.</Popup>
-        </Marker>
-      </MapContainer>
+   <MapContainer 
+  center={[30.0444, 31.2357] as [number, number]} 
+  zoom={13} 
+  style={{ height: "300px", width: "100%" }}
+>
+  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+</MapContainer>
     </div>
   </div>
 </div>
