@@ -1,362 +1,432 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Activity, Heart, ArrowRight, RotateCcw, Sparkles, 
-  Flame, Droplets, ShieldCheck, Zap, Gauge, FileText, CheckCircle2 
+  Radio, Calendar, Clock, Users, Send, 
+  CheckCircle2, Sparkles, MessageSquarePlus, ShieldAlert,
+  FileText, ArrowRight, Play, Headphones, HelpCircle, 
+  Activity, Stethoscope, BookmarkCheck, ChevronLeft, Volume2
 } from 'lucide-react';
 
-const AdvancedHealthCalculator = () => {
-  // --- مدخلات البيانات الكثيرة ---
-  const [age, setAge] = useState<number | ''>(32);
-  const [weight, setWeight] = useState<number | ''>(82);
-  const [height, setHeight] = useState<number | ''>(174);
-  const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [activity, setActivity] = useState<number>(1.375); // خفيف التمارين
-  const [sleepHours, setSleepHours] = useState<number>(6); // ساعات النوم
-  const [waterIntake, setWaterIntake] = useState<number>(1.5); // لتر الماء يومياً
+const UltimateDoctorLiveSpace = () => {
+  // --- حالات التفاعل ---
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [patientQuestion, setPatientQuestion] = useState('');
+  const [patientName, setPatientName] = useState('');
+  const [customTopic, setCustomTopic] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState('مقاومة الإنسولين وأيض السكر');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'library'>('upcoming');
 
-  // --- حالات النتائج ---
-  const [isCalculated, setIsCalculated] = useState<boolean>(false);
-  const [results, setResults] = useState({
-    bmi: 0,
-    bmr: 0,
-    tdee: 0,
-    bioAge: 0,
-    metabolismEfficiency: 0,
-    waterScore: '',
-    sleepScore: '',
-    adviceList: [] as string[]
-  });
-
-  // --- خيارات النشاط ---
-  const activityLevels = [
-    { label: "خامل تماماً (عمل مكتبي)", value: 1.2 },
-    { label: "خفيف النشاط (تمارين خفيفة 1-3 أيام)", value: 1.375 },
-    { label: "نشيط متوسط (تمارين 3-5 أيام)", value: 1.55 },
-    { label: "نشيط جداً (تمارين يومية مكثفة)", value: 1.725 },
+  // --- بيانات غنية ومكثفة ---
+  const upcomingSpaces = [
+    {
+      id: 1,
+      title: "التعايش الآمن مع مقاومة الانسولين وتخفيض السكر التراكمي بدون حرمان",
+      doctor: "د. أحمد الشريف",
+      role: "استشاري الأمراض الباطنة والسكري وغدد صماء",
+      date: "اليوم، السبت",
+      time: "9:00 مساءً",
+      listenersCount: 420,
+      status: "مباشر قريباً",
+      category: "الغدد الصماء والأيض",
+      description: "جلسة افتراضية مفتوحة للإجابة على كافة استفساراتكم حول أعراض التعب المزمن، ضبط السكر، وإيقاف تدهور الخلايا."
+    },
+    {
+      id: 2,
+      title: "أسرار القولون العصبي الخفي: كيف تفرق بينه وبين سوء الامتصاص الحاد؟",
+      doctor: "د. أحمد الشريف",
+      role: "استشاري الأمراض الباطنة والجهاز الهضمي",
+      date: "الثلاثاء القادم",
+      time: "8:30 مساءً",
+      listenersCount: 310,
+      status: "مجدول",
+      category: "الجهاز الهضمي والمناعة",
+      description: "مناقشة الأسباب الجذرية للانتفاخات المزمنة، حساسية الأطعمة الخفية، وطرق إعادة بناء جدار الأمعاء."
+    },
+    {
+      id: 3,
+      title: "ارتفاع الضغط الصامت وعلاقته باحتباس السوائل ووظائف الكلى",
+      doctor: "د. أحمد الشريف",
+      role: "استشاري الأمراض الباطنة",
+      date: "الخميس القادم",
+      time: "9:00 مساءً",
+      listenersCount: 280,
+      status: "مجدول",
+      category: "القلب والكلى",
+      description: "قراءة في قراءات الضغط اليومية، متى تكون مقلقة؟ وكيف تحمي الأوعية الدموية بطرق طبيعية وطبية دقيقة."
+    }
   ];
 
-  // --- خوارزمية الحساب المتقدمة ---
-  const handleCalculate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!age || !weight || !height) return;
-
-    const numAge = Number(age);
-    const numWeight = Number(weight);
-    const numHeight = Number(height);
-
-    // 1. حساب مؤشر كتلة الجسم BMI
-    const heightM = numHeight / 100;
-    const bmiVal = Number((numWeight / (heightM * heightM)).toFixed(1));
-
-    // 2. حساب معدل الأيض الأساسي BMR (معادلة Mifflin-St Jeor)
-    let bmrVal = (10 * numWeight) + (6.25 * numHeight) - (5 * numAge);
-    bmrVal = gender === 'male' ? bmrVal + 5 : bmrVal - 161;
-
-    // 3. السعرات الكلية المستهلكة TDEE
-    const tdeeVal = Math.round(bmrVal * activity);
-
-    // 4. العمر البيولوجي التقديري
-    let bioAgeVal = numAge;
-    if (bmiVal > 25) bioAgeVal += Math.round((bmiVal - 25) * 0.9);
-    if (sleepHours < 7) bioAgeVal += 2;
-    if (waterIntake < 2) bioAgeVal += 1;
-    if (activity === 1.2) bioAgeVal += 3;
-
-    // 5. كفاءة الأيض %
-    let metaEff = 80;
-    if (bmiVal >= 18.5 && bmiVal <= 24.9) metaEff += 15;
-    else metaEff -= Math.abs(bmiVal - 22) * 2;
-    if (activity >= 1.55) metaEff += 10;
-    if (sleepHours < 6) metaEff -= 10;
-    metaEff = Math.min(Math.max(Math.round(metaEff), 35), 98);
-
-    // 6. توليد التوصيات الذكية
-    const advices: string[] = [];
-    if (bmiVal > 25) advices.push("مؤشر كتلة الجسم يشير لزيادة في الدهون الحشوية، مما يضغط على كفاءة الأيض.");
-    else if (bmiVal < 18.5) advices.push("وزنك أقل من المعدل الصحي الطبيعي، وتحتاج لبرنامج بناء كتلة عضلية صحية.");
-    
-    if (sleepHours < 7) advices.push("نقص ساعات النوم يؤثر سلبياً على هرمونات الحرق (اللبتين والجرلين) ويزيد مقاومة الإنسولين.");
-    if (waterIntake < 2.5) advices.push("معدل شرب الماء لديك منخفض، وهو المسبب الرئيسي لبطء عمليات التخلص من السموم وحرق الدهون.");
-    if (activity === 1.2) advices.push("نمط الحياة الخامل يرفع من عمرك البيولوجي، ونقترح إدخال نشاط حركي بسيط منتظم.");
-
-    if (advices.length === 0) {
-      advices.push("مؤشراتك العامة ممتازة! لديك أساس قوي للوصول إلى أقصى درجات الحيوية المستدامة.");
+  const archivedLibrary = [
+    {
+      id: 101,
+      title: "الضغط المرتفع الصامت: الأسباب الطبية وطرق السيطرة بالأدوية الحديثة",
+      duration: "45 دقيقة",
+      listens: "1.4k استماع حي",
+      date: "منذ 3 أيام",
+      category: "القلب والأوعية",
+      icon: Activity,
+      highlights: ["جرعات الأدوية الآمنة", "تأثير الأملاح الخفية", "إرشادات الطوارئ المنزلية"]
+    },
+    {
+      id: 102,
+      title: "نقص فيتامين د ومخزون الحديد.. العلاقة الخفية بالإرهاق المستمر وفقدان التركيز",
+      duration: "52 دقيقة",
+      listens: "2.8k استماع حي",
+      date: "منذ أسبوع",
+      category: "الفيتامينات والأيض",
+      icon: Headphones,
+      highlights: ["الفرق بين الأنواع المختلفة", "أفضل وقت للامتصاص", "الجرعات التداخلية الخاطئة"]
+    },
+    {
+      id: 103,
+      title: "إدارة الكوليسترول الضار والدهون الثلاثية دون أعراض جانبية للعضلات",
+      duration: "40 دقيقة",
+      listens: "3.1k استماع حي",
+      date: "منذ أسبوعين",
+      category: "الدهون والقلب",
+      icon: ShieldAlert,
+      highlights: ["حماية الكبد", "التحاليل الدورية المطلوبة", "النظام الغذائي المرافق"]
     }
+  ];
 
-    setResults({
-      bmi: bmiVal,
-      bmr: Math.round(bmrVal),
-      tdee: tdeeVal,
-      bioAge: bioAgeVal,
-      metabolismEfficiency: metaEff,
-      waterScore: waterIntake < 2 ? 'منخفض (يحتاج تحسين)' : 'ممتاز وكافي',
-      sleepScore: sleepHours < 7 ? 'غير كافٍ للإصلاح الخلوي' : 'مثالي لعملية الاستشفاء',
-      adviceList: advices
-    });
+  const presetTopics = [
+    "مقاومة الإنسولين وأيض السكر",
+    "القولون العصبي والانتفاخات",
+    "ارتفاع ضغط الدم والدوخة",
+    "خمول الغدة الدرقية وزيادة الوزن",
+    "نقص الحديد ومخزون الفيتامينات",
+    "الكبد الدهني والسموم الحشوية"
+  ];
 
-    setIsCalculated(true);
-  };
-
-  const handleReset = () => {
-    setIsCalculated(false);
+  const handleSubmitQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patientQuestion.trim()) return;
+    
+    setIsSubmitted(true);
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setIsQuestionModalOpen(false);
+      setPatientQuestion('');
+      setPatientName('');
+      setCustomTopic('');
+    }, 3000);
   };
 
   return (
     <section className="relative py-32 px-6 bg-[#FAF9F6] text-stone-900 overflow-hidden" dir="rtl">
       
-      {/* إضاءات خلفية بيضاء ونعومة بيج فاخرة */}
-      <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-emerald-100/60 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-emerald-100/65 rounded-full blur-[160px] pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-stone-200/40 rounded-full blur-[160px] pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto relative z-10">
+      <div className="max-w-6xl mx-auto relative z-10">
         
-        {/* رأس القسم */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-full text-emerald-700 text-xs font-mono tracking-widest shadow-sm">
-            <Sparkles size={14} />
-            <span>CLINICAL BIO-METRIC DIAGNOSTIC ENGINE</span>
+          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-full text-emerald-700 text-xs tracking-widest shadow-sm">
+            <Sparkles size={14} className="text-emerald-600" />
+            <span>CLINICAL LIVE Q&A & AUDIO HUB</span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-black tracking-tight text-stone-950">
-            لوحة التقييم الحيوي <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">الشاملة</span>
+            السبيسم الطبي المباشر <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">وجداول الحوار</span>
           </h2>
           <p className="text-stone-600 text-base md:text-lg">
-            أدخل بياناتك التفصيلية لتحصل على تقرير طبي مبدئي يحلل كفاءة الأيض، العمر البيولوجي، واحتياجاتك الحيوية بدقة.
+            منصة صوتية حية تتيح لك مناقشة طبيبك مباشرة، طرح أسئلتك الباطنية بحرية، والاطلاع على أرشيف الحلقات الإكلينيكية بدقة متناهية.
           </p>
         </div>
 
-        {/* الحاوية الرئيسية */}
-        <div className="bg-white border border-stone-200/90 rounded-[2.5rem] p-8 md:p-12 shadow-[0_25px_60px_rgba(0,0,0,0.04)] relative overflow-hidden">
-          
-          <AnimatePresence mode="wait">
-            {!isCalculated ? (
-              /* نموذج البيانات الكثيرة والمتكاملة */
-              <motion.form 
-                key="form"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                onSubmit={handleCalculate} 
-                className="space-y-8"
-              >
-                {/* الصف الأول: الجنس والعمر والوزن والطول */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  
-                  {/* الجنس */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-stone-800">الجنس</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setGender('male')}
-                        className={`py-3 rounded-xl border text-sm font-bold transition-all cursor-pointer ${gender === 'male' ? 'bg-emerald-50 border-emerald-600 text-emerald-900 ring-2 ring-emerald-600/10' : 'bg-stone-50 border-stone-200 text-stone-600'}`}
+        <div className="flex justify-center mb-12">
+          <div className="bg-white border border-stone-200 p-1.5 rounded-2xl shadow-sm inline-flex gap-2">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`px-6 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'upcoming' 
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25' 
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Radio size={16} />
+              <span>السبيسمات القادمة والمباشرة ({upcomingSpaces.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('library')}
+              className={`px-6 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'library' 
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25' 
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Headphones size={16} />
+              <span>أرشيف الحلقات الطبية ({archivedLibrary.length})</span>
+            </button>
+          </div>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {activeTab === 'upcoming' ? (
+            <motion.div 
+              key="upcoming"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-8"
+            >
+              <div className="bg-white border border-stone-200/90 rounded-[2.5rem] p-8 md:p-12 shadow-[0_25px_60px_rgba(0,0,0,0.04)] relative overflow-hidden">
+                
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-stone-100">
+                  <div className="flex items-center gap-3">
+                    <span className="relative flex h-3.5 w-3.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500"></span>
+                    </span>
+                    <span className="text-xs font-bold text-red-600 tracking-wider uppercase bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                      {upcomingSpaces[0].status}
+                    </span>
+                    <span className="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full border border-stone-200">
+                      {upcomingSpaces[0].category}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-stone-600 text-xs font-medium">
+                    <div className="flex items-center gap-1.5 bg-stone-50 border border-stone-200/80 px-3 py-1.5 rounded-xl">
+                      <Calendar size={14} className="text-emerald-600" />
+                      <span>{upcomingSpaces[0].date}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-stone-50 border border-stone-200/80 px-3 py-1.5 rounded-xl">
+                      <Clock size={14} className="text-teal-600" />
+                      <span>{upcomingSpaces[0].time}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="py-8 space-y-4">
+                  <h3 className="text-2xl md:text-3xl font-black text-stone-900 leading-snug">
+                    {upcomingSpaces[0].title}
+                  </h3>
+                  <p className="text-stone-600 text-base leading-relaxed max-w-3xl">
+                    {upcomingSpaces[0].description}
+                  </p>
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-stone-700">
+                    <div className="flex items-center gap-2">
+                      <Stethoscope size={16} className="text-emerald-600" />
+                      <span className="font-bold text-stone-900">{upcomingSpaces[0].doctor}</span>
+                    </div>
+                    <span className="hidden sm:inline text-stone-300">|</span>
+                    <span className="text-stone-500">{upcomingSpaces[0].role}</span>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-stone-600 text-xs w-full sm:w-auto justify-center sm:justify-start">
+                    <Users size={16} className="text-emerald-600" />
+                    <span>انضم حتى الآن <strong className="text-stone-900">{upcomingSpaces[0].listenersCount} مريض ومتابع</strong> في الانتظار</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => setIsQuestionModalOpen(true)}
+                      className="flex-1 sm:flex-none px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs md:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer"
+                    >
+                      <MessageSquarePlus size={16} />
+                      <span>أرسل سؤالك مسبقاً لايف</span>
+                    </button>
+
+                    <button 
+                      onClick={() => alert("تم تفعيل التذكير بنجاح! سننبهك قبل بدء السبيسم بدقائق.")}
+                      className="px-5 py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs md:text-sm transition-all cursor-pointer border border-stone-200"
+                    >
+                      تذكيرني بالموعد
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {upcomingSpaces.slice(1).map((space) => (
+                  <div key={space.id} className="bg-white border border-stone-200/90 rounded-3xl p-6 shadow-sm space-y-4 hover:border-emerald-500/50 transition-all">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full">{space.category}</span>
+                      <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">{space.status}</span>
+                    </div>
+                    <h4 className="font-bold text-stone-900 text-lg leading-snug">{space.title}</h4>
+                    <p className="text-stone-600 text-xs line-clamp-2">{space.description}</p>
+                    <div className="flex justify-between items-center pt-4 border-t border-stone-100 text-xs text-stone-500">
+                      <span>📅 {space.date} - {space.time}</span>
+                      <button 
+                        onClick={() => setIsQuestionModalOpen(true)}
+                        className="text-emerald-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        ذكر
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setGender('female')}
-                        className={`py-3 rounded-xl border text-sm font-bold transition-all cursor-pointer ${gender === 'female' ? 'bg-emerald-50 border-emerald-600 text-emerald-900 ring-2 ring-emerald-600/10' : 'bg-stone-50 border-stone-200 text-stone-600'}`}
-                      >
-                        أنثى
+                        <span>احجز سؤالك</span> <ArrowRight size={14} />
                       </button>
                     </div>
                   </div>
+                ))}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="library"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            >
+              {archivedLibrary.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <div key={item.id} className="bg-white border border-stone-200/90 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-6 hover:shadow-md transition-all">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
+                          <IconComponent size={24} />
+                        </div>
+                        <span className="text-[11px] text-stone-500 bg-stone-100 px-3 py-1 rounded-full">{item.date}</span>
+                      </div>
 
-                  {/* العمر */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-stone-800">العمر (بالسنوات)</label>
-                    <input 
-                      type="number" min="15" max="100"
-                      value={age}
-                      onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="w-full p-3.5 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-base focus:border-emerald-600 focus:bg-white outline-none transition-all"
-                      required
-                    />
-                  </div>
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{item.category}</span>
+                        <h4 className="font-bold text-stone-900 text-base leading-snug">{item.title}</h4>
+                      </div>
 
-                  {/* الوزن */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-stone-800">الوزن الحالي (كجم)</label>
-                    <input 
-                      type="number" min="30" max="250"
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="w-full p-3.5 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-base focus:border-emerald-600 focus:bg-white outline-none transition-all"
-                      required
-                    />
-                  </div>
+                      <div className="space-y-1.5 pt-2 border-t border-stone-100">
+                        <span className="text-[11px] font-bold text-stone-500 block">أبرز المحاور التي نوقشت:</span>
+                        <ul className="space-y-1">
+                          {item.highlights.map((h, i) => (
+                            <li key={i} className="text-xs text-stone-600 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                              <span>{h}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
 
-                  {/* الطول */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-stone-800">الطول (سم)</label>
-                    <input 
-                      type="number" min="100" max="230"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="w-full p-3.5 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-base focus:border-emerald-600 focus:bg-white outline-none transition-all"
-                      required
-                    />
-                  </div>
-
-                </div>
-
-                {/* الصف الثاني: معدل النشاط اليومي */}
-                <div className="space-y-3">
-                  <label className="block text-sm font-bold text-stone-800">معدل النشاط والحركة الأسبوعي</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {activityLevels.map((lvl, idx) => (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => setActivity(lvl.value)}
-                        className={`p-3.5 rounded-xl border text-right font-medium text-xs transition-all cursor-pointer ${
-                          activity === lvl.value 
-                            ? 'bg-emerald-50 border-emerald-600 text-emerald-900 ring-2 ring-emerald-600/10 shadow-sm' 
-                            : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
-                        }`}
+                    <div className="pt-4 border-t border-stone-100 flex items-center justify-between text-xs">
+                      <div className="space-y-0.5">
+                        <span className="text-stone-500 block">⏱️ {item.duration}</span>
+                        <span className="text-stone-900 font-bold">{item.listens}</span>
+                      </div>
+                      <button 
+                        onClick={() => alert(`جاري تشغيل التسجيل الصوتي للحلقة: ${item.title}`)}
+                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                       >
-                        {lvl.label}
+                        <Volume2 size={14} />
+                        <span>استماع</span>
                       </button>
-                    ))}
+                    </div>
                   </div>
-                </div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-                {/* الصف الثالث: تفاصيل إضافية (ساعات النوم وشرب الماء) لزيادة غنى البيانات */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                  
-                  {/* ساعات النوم */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-stone-800">متوسط ساعات النوم يومياً</label>
-                    <select
-                      value={sleepHours}
-                      onChange={(e) => setSleepHours(Number(e.target.value))}
-                      className="w-full p-3.5 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm focus:border-emerald-600 focus:bg-white outline-none transition-all cursor-pointer"
-                    >
-                      <option value={5}>أقل من 6 ساعات (غير كافٍ)</option>
-                      <option value={6}>6 إلى 7 ساعات (متوسط)</option>
-                      <option value={7}>7 إلى 8 ساعات (جيد)</option>
-                      <option value={9}>8 ساعات فأكثر (مثالي)</option>
-                    </select>
-                  </div>
-
-                  {/* شرب الماء */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-stone-800">معدل شرب الماء اليومي</label>
-                    <select
-                      value={waterIntake}
-                      onChange={(e) => setWaterIntake(Number(e.target.value))}
-                      className="w-full p-3.5 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm focus:border-emerald-600 focus:bg-white outline-none transition-all cursor-pointer"
-                    >
-                      <option value={1.0}>أقل من 1.5 لتر (قليل جداً)</option>
-                      <option value={1.5}>1.5 إلى 2 لتر (متوسط)</option>
-                      <option value={2.5}>أكثر من 2.5 لتر (ممتاز)</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* زر الإرسال للحساب */}
-                <button
-                  type="submit"
-                  className="w-full py-4.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg flex items-center justify-center gap-3 transition-all shadow-xl shadow-emerald-600/20 cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <Gauge size={22} />
-                  <span>تحليل وعرض التقرير الحيوي الشامل</span>
-                  <ArrowRight size={20} />
-                </button>
-              </motion.form>
-            ) : (
-              /* لوحة نتائج التقرير الشامل والمكثفة بالبيانات */
+        <AnimatePresence>
+          {isQuestionModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-sm">
               <motion.div 
-                key="results"
-                initial={{ opacity: 0, scale: 0.96 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-8"
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 max-w-lg w-full relative shadow-2xl max-h-[90vh] overflow-y-auto"
               >
-                {/* شبكة المؤشرات الأربعة الرئيسية */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  
-                  {/* العمر البيولوجي */}
-                  <div className="bg-stone-50 border border-stone-200/80 p-5 rounded-2xl text-center space-y-1">
-                    <span className="text-stone-500 text-xs font-bold">العمر البيولوجي المقدر</span>
-                    <div className="text-3xl font-black text-emerald-700">{results.bioAge} <span className="text-xs text-stone-400 font-normal">سنة</span></div>
-                    <p className="text-[11px] text-stone-500">مقارنة بعمرك ({age} سنة)</p>
-                  </div>
-
-                  {/* مؤشر كتلة الجسم BMI */}
-                  <div className="bg-stone-50 border border-stone-200/80 p-5 rounded-2xl text-center space-y-1">
-                    <span className="text-stone-500 text-xs font-bold">مؤشر كتلة الجسم (BMI)</span>
-                    <div className="text-3xl font-black text-teal-700">{results.bmi}</div>
-                    <p className="text-[11px] text-stone-500">
-                      {results.bmi < 18.5 ? 'نحافة' : results.bmi <= 24.9 ? 'وزن مثالي' : results.bmi <= 29.9 ? 'زيادة وزن' : 'سمنة'}
-                    </p>
-                  </div>
-
-                  {/* كفاءة الأيض */}
-                  <div className="bg-stone-50 border border-stone-200/80 p-5 rounded-2xl text-center space-y-1">
-                    <span className="text-stone-500 text-xs font-bold">كفاءة الأيض والحرق</span>
-                    <div className="text-3xl font-black text-cyan-700">{results.metabolismEfficiency}%</div>
-                    <p className="text-[11px] text-stone-500">معدل نشاط الخلايا للطاقة</p>
-                  </div>
-
-                  {/* الاحتياج اليومي من السعرات TDEE */}
-                  <div className="bg-stone-50 border border-stone-200/80 p-5 rounded-2xl text-center space-y-1">
-                    <span className="text-stone-500 text-xs font-bold">حرق السعرات اليومي (TDEE)</span>
-                    <div className="text-3xl font-black text-amber-600">{results.tdee} <span className="text-xs text-stone-400 font-normal">سعرة</span></div>
-                    <p className="text-[11px] text-stone-500">استهلاك الجسم الكلي</p>
-                  </div>
-
-                </div>
-
-                {/* قسم التحليلات والتوصيات الطبية المخصصة */}
-                <div className="bg-emerald-50/60 border border-emerald-200/80 p-6 rounded-2xl space-y-4">
-                  <h4 className="font-extrabold text-emerald-950 flex items-center gap-2 text-base">
-                    <ShieldCheck size={20} className="text-emerald-600" />
-                    تحليل الأداء الحيوي والملاحظات الإكلينيكية:
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-stone-100">
+                  <h4 className="font-bold text-stone-900 text-base flex items-center gap-2">
+                    <MessageSquarePlus className="text-emerald-600" size={20} />
+                    <span>طرح سؤال مباشر للدكتور</span>
                   </h4>
-                  <ul className="space-y-2.5">
-                    {results.adviceList.map((adv, index) => (
-                      <li key={index} className="flex items-start gap-2.5 text-stone-700 text-sm leading-relaxed">
-                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-1" />
-                        <span>{adv}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* أزرار الإجراء النهائي (الهدف: دفع العميل لنموذج الحجز) */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <a
-                    href="#booking-section"
-                    className="flex-1 py-4.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer"
+                  <button 
+                    onClick={() => setIsQuestionModalOpen(false)}
+                    className="text-stone-400 hover:text-stone-900 text-sm cursor-pointer p-1"
                   >
-                    <span>احجز استشارتك مع الطبيب لتعديل هذه المؤشرات</span>
-                    <ArrowRight size={18} />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-6 py-4.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <RotateCcw size={16} />
-                    <span>تعديل المدخلات</span>
+                    ✕
                   </button>
                 </div>
 
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {!isSubmitted ? (
+                  <form onSubmit={handleSubmitQuestion} className="space-y-4">
+                    
+                    <div className="space-y-2 text-right">
+                      <label className="block text-xs font-bold text-stone-700">اختر المحور الطبي للسؤال أو اكتبه يدوياً</label>
+                      <select 
+                        value={selectedTopic}
+                        onChange={(e) => {
+                          setSelectedTopic(e.target.value);
+                          setCustomTopic('');
+                        }}
+                        className="w-full p-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 text-xs font-bold focus:border-emerald-600 focus:bg-white outline-none cursor-pointer"
+                      >
+                        {presetTopics.map((topic, i) => (
+                          <option key={i} value={topic}>{topic}</option>
+                        ))}
+                        <option value="custom">✨ كتابة محور مخصص يدوياً...</option>
+                      </select>
 
-        </div>
+                      {selectedTopic === 'custom' && (
+                        <input 
+                          type="text"
+                          placeholder="اكتب المحور الطبي الخاص بك هنا..."
+                          value={customTopic}
+                          onChange={(e) => setCustomTopic(e.target.value)}
+                          className="w-full mt-2 p-3 rounded-xl bg-stone-50 border border-emerald-500 text-stone-900 text-xs focus:bg-white outline-none"
+                          required
+                        />
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 text-right">
+                      <label className="block text-xs font-bold text-stone-700">اسمك (اختياري للخصوصية)</label>
+                      <input 
+                        type="text" 
+                        placeholder="مثال: أبو محمد"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 text-xs md:text-sm focus:border-emerald-600 focus:bg-white outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 text-right">
+                      <label className="block text-xs font-bold text-stone-700">اكتب سؤالك الباطني بوضوح *</label>
+                      <textarea 
+                        rows={4}
+                        placeholder="مثال: أعاني من شعور بالحموضة المستمرة بعد الأكل..."
+                        value={patientQuestion}
+                        onChange={(e) => setPatientQuestion(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 text-xs md:text-sm focus:border-emerald-600 focus:bg-white outline-none transition-all resize-none"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-emerald-50/80 border border-emerald-200 p-3 rounded-xl text-emerald-800 text-[11px]">
+                      <ShieldAlert size={16} className="shrink-0 text-emerald-600" />
+                      <span>جميع الأسئلة تخضع للسرية الطبية التامة وتتم الإجابة عليها استشارياً وليس كبديل عن الكشف السريري.</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-600/20"
+                    >
+                      <Send size={16} />
+                      <span>إرسال السؤال إلى جدول الدكتور المباشر</span>
+                    </button>
+                  </form>
+                ) : (
+                  <div className="text-center py-10 space-y-3">
+                    <CheckCircle2 size={48} className="text-emerald-600 mx-auto animate-bounce" />
+                    <h5 className="text-stone-900 font-bold text-lg">تم إرسال سؤالك بنجاح!</h5>
+                    <p className="text-stone-600 text-xs">سيقوم الدكتور بمناقشة حالتك والإجابة عنها خلال السبيسم المباشر القادم.</p>
+                  </div>
+                )}
+
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       </div>
     </section>
   );
 };
 
-export default AdvancedHealthCalculator;
+export default UltimateDoctorLiveSpace;
